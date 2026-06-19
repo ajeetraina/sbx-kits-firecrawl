@@ -32,6 +32,10 @@ commands:
       description: "Install the Firecrawl Python SDK"
 
 agentContext: |
+  Firecrawl live web access: the firecrawl-py SDK is installed and the
+  FIRECRAWL_API_KEY credential is injected by the sbx proxy on requests to
+  api.firecrawl.dev. Use it for current, LLM-ready web data:
+
       from firecrawl import Firecrawl
       fc = Firecrawl()                                 # key handled by the sbx proxy
 
