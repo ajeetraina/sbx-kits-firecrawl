@@ -4,9 +4,6 @@ name: firecrawl
 displayName: Firecrawl (live web access)
 description: "Adds live web search/scrape/crawl to any agent via the firecrawl-py SDK, wired to Firecrawl's cloud API. Needs a key: sbx secret set -g firecrawl (the kit holds no key)."
 
-# Egress allowlist (deny-by-default). Install reaches PyPI; runtime calls go to
-# Firecrawl's cloud API. Credential injection (below) also requires its target
-# domain to be reachable here.
 caps:
   network:
     allow:
@@ -14,12 +11,6 @@ caps:
       - files.pythonhosted.org
       - api.firecrawl.dev
 
-# The kit declares WHAT it needs (service id + where to inject the key); the user
-# declares WHERE the key lives (sbx secret store, or a binding in
-# ~/.config/sbx/credentials.yaml). The Firecrawl SDK sends the key as a Bearer
-# token, so the proxy swaps the in-container sentinel into the Authorization
-# header on outbound requests to api.firecrawl.dev. FIRECRAWL_API_KEY never
-# enters the kit image or the sandbox filesystem.
 credentials:
   - service: firecrawl
     apiKey:
@@ -29,12 +20,7 @@ credentials:
           header: Authorization
           format: "Bearer %s"
 
-# The firecrawl-py SDK refuses to make a request unless FIRECRAWL_API_KEY is set,
-# so it must hold the `proxy-managed` sentinel for the SDK to send a header the
-# proxy can swap. The current sbx rc does not auto-populate apiKey.name in the
-# container, so the kit sets the sentinel explicitly here (the proxy replaces it
-# with the real key on requests to api.firecrawl.dev — the real key never lands
-# in the sandbox).
+
 environment:
   variables:
     FIRECRAWL_API_KEY: "proxy-managed"
@@ -46,13 +32,6 @@ commands:
       description: "Install the Firecrawl Python SDK"
 
 agentContext: |
-  ## Firecrawl — live web access
-
-  The `firecrawl-py` SDK is installed and the `FIRECRAWL_API_KEY` credential is
-  injected by the sbx proxy on requests to api.firecrawl.dev, so you can fetch
-  current, LLM-ready web data instead of relying on training-cutoff knowledge or
-  guessing about live pages.
-
       from firecrawl import Firecrawl
       fc = Firecrawl()                                 # key handled by the sbx proxy
 
