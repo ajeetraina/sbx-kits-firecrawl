@@ -3,9 +3,8 @@
 A standalone [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) kit (`kind: mixin`) that adds
 live web access to any sandbox agent via the [Firecrawl](https://www.firecrawl.dev/) Python SDK (`firecrawl-py`).
 
-A *mixin* layers a capability onto an **existing** agent (`claude`, `codex`, `gemini`, …) — it does not
-define an agent of its own. This kit gives whatever agent you run the ability to **search the web, scrape a
-page to clean markdown, and crawl a site**, instead of relying on its training-cutoff knowledge.
+This kit gives whatever agent you run the ability to search the web, scrape a
+page to clean markdown, and crawl a site, instead of relying on its training-cutoff knowledge.
 
 
 ## What the kit does
