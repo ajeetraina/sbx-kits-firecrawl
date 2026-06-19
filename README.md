@@ -84,7 +84,7 @@ Arguments meant for the agent itself go after a `--` separator, e.g. `sbx run --
 Once you're in the sandbox session, use `!` shell escapes to prove the mixin is really inside. Verify on
 independent layers, from a cheap import check up to a full end-to-end scrape.
 
-**3a. The package is installed (the pinned version, in the user-site path):**
+**i. The package is installed (the pinned version, in the user-site path):**
 
 ```console
 !python3 -c "import firecrawl, importlib.metadata as m; print('firecrawl-py', m.version('firecrawl-py'), '->', firecrawl.__file__)"
@@ -94,7 +94,7 @@ Expect `firecrawl-py 4.30.1` (the exact pin from this kit's `spec.yaml`) install
 `/home/agent/.local/lib/.../site-packages/` — the user-site location that matches the kit installing as user
 `1000` rather than as root.
 
-**3b. The credential is wired as a proxy-managed sentinel** — the real key never enters the sandbox.
+**ii. The credential is wired as a proxy-managed sentinel** — the real key never enters the sandbox.
 `FIRECRAWL_API_KEY` is set to the literal `proxy-managed` inside the container (the kit sets this sentinel via
 `environment.variables`, since the firecrawl-py SDK won't send a request without it), and the proxy swaps in
 the real key on outbound requests to `api.firecrawl.dev`. Seeing the sentinel (not a real `fc-…` key) is the
@@ -107,7 +107,7 @@ fingerprint that the credential is proxy-managed:
 Expect `FIRECRAWL_API_KEY=proxy-managed`. If you instead see a real `fc-…` value, the credential is coming
 from somewhere other than this kit's proxy injection.
 
-**3c. End-to-end functional proof** — scrape a page through the cloud API. This single command transitively
+**iii. End-to-end functional proof** — scrape a page through the cloud API. This single command transitively
 exercises the package, the env var, and network egress to `api.firecrawl.dev`, so if you only run one check,
 run this one:
 
