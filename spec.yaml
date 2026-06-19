@@ -29,6 +29,16 @@ credentials:
           header: Authorization
           format: "Bearer %s"
 
+# The firecrawl-py SDK refuses to make a request unless FIRECRAWL_API_KEY is set,
+# so it must hold the `proxy-managed` sentinel for the SDK to send a header the
+# proxy can swap. The current sbx rc does not auto-populate apiKey.name in the
+# container, so the kit sets the sentinel explicitly here (the proxy replaces it
+# with the real key on requests to api.firecrawl.dev — the real key never lands
+# in the sandbox).
+environment:
+  variables:
+    FIRECRAWL_API_KEY: "proxy-managed"
+
 commands:
   install:
     - command: "pip install --break-system-packages 'firecrawl-py==4.30.1'"

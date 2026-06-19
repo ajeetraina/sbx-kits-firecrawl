@@ -100,10 +100,11 @@ Expect `firecrawl-py 4.30.1` (the exact pin from this kit's `spec.yaml`) install
 `/home/agent/.local/lib/.../site-packages/` — the user-site location that matches the kit installing as user
 `1000` rather than as root.
 
-**3b. The credential is wired as a proxy-managed sentinel** — in v2 the real key never enters the sandbox.
-The engine sets `FIRECRAWL_API_KEY` to the literal `proxy-managed` inside the container and the proxy swaps
-in the real key on outbound requests to `api.firecrawl.dev`. Seeing the sentinel (not a real `fc-…` key) is
-the fingerprint that the kit's `credentials[]` block wired things up:
+**3b. The credential is wired as a proxy-managed sentinel** — the real key never enters the sandbox.
+`FIRECRAWL_API_KEY` is set to the literal `proxy-managed` inside the container (the kit sets this sentinel via
+`environment.variables`, since the firecrawl-py SDK won't send a request without it), and the proxy swaps in
+the real key on outbound requests to `api.firecrawl.dev`. Seeing the sentinel (not a real `fc-…` key) is the
+fingerprint that the credential is proxy-managed:
 
 ```console
 !env | grep -E 'FIRECRAWL_API_KEY'
@@ -156,8 +157,13 @@ the sbx runtime is refusing to mount your home directory. `sbx run` mounts the c
 the sandbox, and mounting your entire home dir is blocked for safety. Run from any directory other than your
 home directory.
 
-If a scrape fails with a network error, confirm `api.firecrawl.dev` is in the kit's `network.allowedDomains`
+If a scrape fails with a network error, confirm `api.firecrawl.dev` is in the kit's `caps.network.allow`
 (it is, by default) and that your org's governance policy hasn't overridden it.
+
+If a scrape raises `PaymentRequiredError: ... Insufficient credits` (HTTP 402), that's the **good** failure:
+the request authenticated successfully (a bad/missing key returns 401, not 402) — your Firecrawl account is
+just out of credits. The kit is working; top up at <https://firecrawl.dev/pricing> or lower the request
+`limit`.
 
 ## License
 
