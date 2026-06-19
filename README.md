@@ -12,13 +12,10 @@ page to clean markdown, and crawl a site, instead of relying on its training-cut
 Four observable things, so each is independently verifiable (see §3):
 
 1. Installs `firecrawl-py==4.30.1` as the agent user (`1000`).
-2. Declares a `firecrawl` credential — the key is swapped into the `Authorization` header by the sbx proxy on
+2. Declares a `firecrawl` credential - the key is swapped into the `Authorization` header by the sbx proxy on
    requests to `api.firecrawl.dev`, never baked into the image or written to the sandbox.
 3. Allows network egress to `api.firecrawl.dev` (plus PyPI for install) via `caps.network.allow`.
 4. Injects an `agentContext` note so the agent knows the capability exists and how to call it.
-
-> This kit is written against **kit-spec v2** (`schemaVersion: "2"`): egress lives under `caps.network`, and
-> the credential is declared under `credentials[]` rather than the deprecated v1 `environment.proxyManaged`.
 
 ## Prerequisites
 
