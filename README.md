@@ -159,6 +159,3 @@ the request authenticated successfully (a bad/missing key returns 401, not 402) 
 just out of credits. The kit is working; top up at <https://firecrawl.dev/pricing> or lower the request
 `limit`.
 
-## License
-
-See [LICENSE](./LICENSE) (Apache 2.0).
