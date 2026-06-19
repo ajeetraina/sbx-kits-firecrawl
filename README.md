@@ -22,7 +22,7 @@ Four observable things, so each is independently verifiable (see §3):
 ### 1. Store the Firecrawl API key
 
 Get a key from [firecrawl.dev](https://www.firecrawl.dev/) (it looks like `fc-...`). Store it once with
-sbx's secret manager — the key is never baked into the kit, and the sbx proxy injects it into the sandbox at
+sbx's secret manager - the key is never baked into the kit, and the sbx proxy injects it into the sandbox at
 runtime (`sbx run` has no `-e` flag):
 
 ```console
