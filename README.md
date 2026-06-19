@@ -1,0 +1,164 @@
+# sbx kit for Firecrawl
+
+A standalone [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) kit (`kind: mixin`) that adds
+live web access to any sandbox agent via the [Firecrawl](https://www.firecrawl.dev/) Python SDK (`firecrawl-py`).
+
+A *mixin* layers a capability onto an **existing** agent (`claude`, `codex`, `gemini`, …) — it does not
+define an agent of its own. This kit gives whatever agent you run the ability to **search the web, scrape a
+page to clean markdown, and crawl a site**, instead of relying on its training-cutoff knowledge.
+
+> Built from the [`sbx-mixins-template`](https://github.com/ajeetraina/sbx-mixins-template), same layout as
+> the [`sbx-kits-mem0`](https://github.com/ajeetraina/sbx-kits-mem0) reference mixin.
+
+## What the kit does
+
+Four observable things, so each is independently verifiable (see §3):
+
+1. Installs `firecrawl-py==4.30.1` as the agent user (`1000`).
+2. Declares a `firecrawl` credential — the key is swapped into the `Authorization` header by the sbx proxy on
+   requests to `api.firecrawl.dev`, never baked into the image or written to the sandbox.
+3. Allows network egress to `api.firecrawl.dev` (plus PyPI for install) via `caps.network.allow`.
+4. Injects an `agentContext` note so the agent knows the capability exists and how to call it.
+
+> This kit is written against **kit-spec v2** (`schemaVersion: "2"`): egress lives under `caps.network`, and
+> the credential is declared under `credentials[]` rather than the deprecated v1 `environment.proxyManaged`.
+
+## Prerequisites
+
+### 1. Store the Firecrawl API key
+
+Get a key from [firecrawl.dev](https://www.firecrawl.dev/) (it looks like `fc-...`). Store it once with
+sbx's secret manager — the key is never baked into the kit, and the sbx proxy injects it into the sandbox at
+runtime (`sbx run` has no `-e` flag):
+
+```console
+echo "$FIRECRAWL_API_KEY" | sbx secret set -g firecrawl   # -g = all sandboxes
+```
+
+Running `sbx secret set -g firecrawl` with no piped value prompts you for the key interactively instead.
+Confirm it's stored:
+
+```console
+sbx secret ls
+```
+
+On the **first** `sbx run` with this kit, sbx asks you to approve sending the `firecrawl` credential to
+`api.firecrawl.dev` and records a binding in `~/.config/sbx/credentials.yaml`. Because the value already lives
+in the secret store, you can accept the defaults — no env var or file source is needed. (In v2 the kit only
+declares *what* it needs and *where to inject it*; you control *where the key comes from*.)
+
+### 2. Launch the sandbox with the kit
+
+Layer the mixin onto an agent. From the published image:
+
+```console
+sbx run --kit docker.io/ajeetraina777/sbx-kits-firecrawl:latest claude
+```
+
+Or straight from this repo over git:
+
+```console
+sbx run --kit "git+https://github.com/ajeetraina/sbx-kits-firecrawl.git" claude
+```
+
+Or from a local clone (the kit lives at the repo root):
+
+```console
+git clone https://github.com/ajeetraina/sbx-kits-firecrawl.git
+sbx run --kit ./sbx-kits-firecrawl/ claude
+```
+
+#### Choosing the agent
+
+The trailing argument (`claude` above) is the **coding agent** that runs inside the sandbox, a separate axis
+from the kit. Any supported agent works — `sbx run --help` lists them:
+
+```
+claude, claude-bedrock, codex, copilot, cursor, docker-agent, droid, gemini, kiro, opencode, shell
+```
+
+So you can swap `claude` for, say, `codex`:
+
+```console
+sbx run --kit docker.io/ajeetraina777/sbx-kits-firecrawl:latest codex
+```
+
+Arguments meant for the agent itself go after a `--` separator, e.g. `sbx run --kit ...:latest codex -- --help`.
+
+## 3. Confirm the kit installed correctly
+
+Once you're in the sandbox session, use `!` shell escapes to prove the mixin is really inside. Verify on
+independent layers, from a cheap import check up to a full end-to-end scrape.
+
+**3a. The package is installed (the pinned version, in the user-site path):**
+
+```console
+!python3 -c "import firecrawl, importlib.metadata as m; print('firecrawl-py', m.version('firecrawl-py'), '->', firecrawl.__file__)"
+```
+
+Expect `firecrawl-py 4.30.1` (the exact pin from this kit's `spec.yaml`) installed under
+`/home/agent/.local/lib/.../site-packages/` — the user-site location that matches the kit installing as user
+`1000` rather than as root.
+
+**3b. The credential is wired as a proxy-managed sentinel** — in v2 the real key never enters the sandbox.
+The engine sets `FIRECRAWL_API_KEY` to the literal `proxy-managed` inside the container and the proxy swaps
+in the real key on outbound requests to `api.firecrawl.dev`. Seeing the sentinel (not a real `fc-…` key) is
+the fingerprint that the kit's `credentials[]` block wired things up:
+
+```console
+!env | grep -E 'FIRECRAWL_API_KEY'
+```
+
+Expect `FIRECRAWL_API_KEY=proxy-managed`. If you instead see a real `fc-…` value, the credential is coming
+from somewhere other than this kit's proxy injection.
+
+**3c. End-to-end functional proof** — scrape a page through the cloud API. This single command transitively
+exercises the package, the env var, and network egress to `api.firecrawl.dev`, so if you only run one check,
+run this one:
+
+```console
+!python3 - <<'PY'
+from firecrawl import Firecrawl
+fc = Firecrawl()                                   # reads FIRECRAWL_API_KEY
+doc = fc.scrape("https://docs.docker.com/ai/sandboxes/", formats=["markdown"])
+md = getattr(doc, "markdown", None) or (doc.get("markdown") if isinstance(doc, dict) else "")
+print(md[:300])
+PY
+```
+
+Expect the first few hundred characters of the page's clean markdown.
+
+## Using Firecrawl from the agent
+
+The `agentContext` note tells the agent it can do this; the one-liners:
+
+```python
+from firecrawl import Firecrawl
+fc = Firecrawl()
+
+fc.scrape("https://example.com", formats=["markdown"])   # one page -> clean markdown
+fc.search("docker sandboxes mixin kit", limit=5)         # search the web, get page content
+fc.crawl("https://docs.example.com", limit=20)           # crawl a whole site/section
+```
+
+See the [Firecrawl Python SDK docs](https://docs.firecrawl.dev/sdks/python) for the full API (formats,
+structured JSON extraction with a schema, crawl options, etc.).
+
+## Troubleshooting
+
+If `sbx run --kit docker.io/...` fails with a mount-policy error like:
+
+```
+ERROR: failed to create sandbox: ... mount policy denied: /Users/<you>: no applicable policies for op(...)
+```
+
+the sbx runtime is refusing to mount your home directory. `sbx run` mounts the current working directory into
+the sandbox, and mounting your entire home dir is blocked for safety. Run from any directory other than your
+home directory.
+
+If a scrape fails with a network error, confirm `api.firecrawl.dev` is in the kit's `network.allowedDomains`
+(it is, by default) and that your org's governance policy hasn't overridden it.
+
+## License
+
+See [LICENSE](./LICENSE) (Apache 2.0).
