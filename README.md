@@ -7,8 +7,6 @@ A *mixin* layers a capability onto an **existing** agent (`claude`, `codex`, `ge
 define an agent of its own. This kit gives whatever agent you run the ability to **search the web, scrape a
 page to clean markdown, and crawl a site**, instead of relying on its training-cutoff knowledge.
 
-> Built from the [`sbx-mixins-template`](https://github.com/ajeetraina/sbx-mixins-template), same layout as
-> the [`sbx-kits-mem0`](https://github.com/ajeetraina/sbx-kits-mem0) reference mixin.
 
 ## What the kit does
 
