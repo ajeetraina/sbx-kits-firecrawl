@@ -1,5 +1,8 @@
 # sbx kit for Firecrawl
 
+<img width="1147" height="661" alt="image" src="https://github.com/user-attachments/assets/eac58f39-1e14-4df1-9f7e-b1084562b3c3" />
+
+
 A standalone [Docker Sandboxes](https://docs.docker.com/ai/sandboxes/) kit (`kind: mixin`) that adds
 live web access to any sandbox agent via the [Firecrawl](https://www.firecrawl.dev/) Python SDK (`firecrawl-py`).
 
