@@ -1,4 +1,4 @@
-# sbx kit for Firecrawl
+# sbx kits for Firecrawl
 
 <img width="1147" height="661" alt="image" src="https://github.com/user-attachments/assets/eac58f39-1e14-4df1-9f7e-b1084562b3c3" />
 
