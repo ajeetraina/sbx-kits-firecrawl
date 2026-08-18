@@ -17,8 +17,8 @@ Four observable things, so each is independently verifiable (see §3):
 1. Installs `firecrawl-py==4.30.1` as the agent user (`1000`).
 2. Declares a `firecrawl` credential - the key is swapped into the `Authorization` header by the sbx proxy on
    requests to `api.firecrawl.dev`, never baked into the image or written to the sandbox.
-3. Allows network egress to `api.firecrawl.dev` (plus PyPI for install) via `caps.network.allow`.
-4. Injects an `agentContext` note so the agent knows the capability exists and how to call it.
+3. Allows network egress to `api.firecrawl.dev` (plus PyPI for install) via `permissions.network.allow`.
+4. Injects an `agentInstructions` note so the agent knows the capability exists and how to call it.
 
 ## Prerequisites
 
@@ -128,7 +128,7 @@ Expect the first few hundred characters of the page's clean markdown.
 
 ## Using Firecrawl from the agent
 
-The `agentContext` note tells the agent it can do this; the one-liners:
+The `agentInstructions` note tells the agent it can do this; the one-liners:
 
 ```python
 from firecrawl import Firecrawl
@@ -154,7 +154,7 @@ the sbx runtime is refusing to mount your home directory. `sbx run` mounts the c
 the sandbox, and mounting your entire home dir is blocked for safety. Run from any directory other than your
 home directory.
 
-If a scrape fails with a network error, confirm `api.firecrawl.dev` is in the kit's `caps.network.allow`
+If a scrape fails with a network error, confirm `api.firecrawl.dev` is in the kit's `permissions.network.allow`
 (it is, by default) and that your org's governance policy hasn't overridden it.
 
 If a scrape raises `PaymentRequiredError: ... Insufficient credits` (HTTP 402), that's the **good** failure:
