@@ -44,6 +44,15 @@ On the **first** `sbx run` with this kit, sbx asks you to approve sending the `f
 in the secret store, you can accept the defaults — no env var or file source is needed. (In v2 the kit only
 declares *what* it needs and *where to inject it*; you control *where the key comes from*.)
 
+> **Under centralized governance, one org rule is also required.** The kit declares egress to
+> `api.firecrawl.dev` itself, but if `sbx policy ls` shows `Governance: Managed by <org>`, that managed policy
+> is default-deny and **overrides the kit's allow** — scrapes fail with a proxy-side 403
+> (`Blocked by network policy: domain api.firecrawl.dev:443 — no matching allow rule`). The governance owner
+> must add a network allow rule for `api.firecrawl.dev` to the org policy (mirror the shape of any existing
+> per-service rule, e.g. a single-host `allow`). PyPI is typically already allowed for installs; `api.firecrawl.dev`
+> is the one host to add. Local `sbx policy allow` rules do **not** work here — they're ignored for org-managed
+> domains. On an ungoverned host using a local `balanced`/`open` policy, no extra step is needed.
+
 ### 2. Launch the sandbox with the kit
 
 Layer the mixin onto an agent. From the published image:
