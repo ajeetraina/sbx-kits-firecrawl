@@ -157,6 +157,22 @@ home directory.
 If a scrape fails with a network error, confirm `api.firecrawl.dev` is in the kit's `permissions.network.allow`
 (it is, by default) and that your org's governance policy hasn't overridden it.
 
+If a scrape fails with `WebsiteNotSupportedError: ... Blocked by network policy: domain api.firecrawl.dev:443 —
+no matching allow rule — blocked by default deny policy` (HTTP 403 from the sbx proxy, **not** from Firecrawl),
+your sandbox is under **centralized governance** and the managed policy is default-deny without a rule for
+`api.firecrawl.dev`. The kit's own `permissions.network.allow` — and any local `sbx policy allow` — **cannot
+widen** egress under managed governance; only the org can. Confirm with:
+
+```console
+sbx policy ls <sandbox-name>        # look for "Managed by <org>" and whether api.firecrawl.dev is allowed
+```
+
+If you see `network policy for "api.firecrawl.dev" is managed by your organization; local allow rules are not
+applied`, ask whoever owns the governance profile to add an `api.firecrawl.dev` allow rule (alongside the
+existing PyPI allow). Alternatively, run the kit on a host using a local `balanced` or `open` policy instead of
+managed governance. Everything else in the kit (SDK install, proxy-injected credential) works regardless — only
+the outbound scrape is gated by this rule.
+
 If a scrape raises `PaymentRequiredError: ... Insufficient credits` (HTTP 402), that's the **good** failure:
 the request authenticated successfully (a bad/missing key returns 401, not 402) — your Firecrawl account is
 just out of credits. The kit is working; top up at <https://firecrawl.dev/pricing> or lower the request
